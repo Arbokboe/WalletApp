@@ -17,4 +17,5 @@
 - Hibernate
 - Gradle
 - RabbitMQ
+- Docker
 
