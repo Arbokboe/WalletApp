@@ -5,9 +5,10 @@ import com.example.wallet.datasource.entityModel.TransactionStatus;
 import com.example.wallet.datasource.entityModel.TransactionType;
 import com.example.wallet.datasource.entityModel.WalletEntity;
 import com.example.wallet.datasource.mapper.TransactionMapper;
-import com.example.wallet.datasource.repository.TransactionRepository;
-import com.example.wallet.datasource.repository.WalletRepository;
+import com.example.wallet.datasource.service.TransactionRepositoryService;
+import com.example.wallet.datasource.service.WalletRepositoryService;
 import com.example.wallet.web.dto.Transaction;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.retry.annotation.Backoff;
@@ -22,19 +23,20 @@ import java.util.Optional;
 
 import static com.example.wallet.messaging.TransactionMessageProducer.TRANSACTION_QUEUE;
 
+@Data
 @Component
 @RequiredArgsConstructor
 public class TransactionMessageConsumer {
 
-    private final WalletRepository walletRepository;
-    private final TransactionRepository transactionRepository;
+    private final WalletRepositoryService walletRepositoryService;
+    private final TransactionRepositoryService transactionRepositoryService;
 
     @RabbitListener(queues = TRANSACTION_QUEUE, concurrency = "10")
     @Retryable(value = {Exception.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
     @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public void handleTransactionRequest(Transaction request) {
         Long startTime = System.nanoTime();
-        Optional<TransactionEntity> existingTransaction = transactionRepository.findByTransactionId(request.getTransactionId());
+        Optional<TransactionEntity> existingTransaction = transactionRepositoryService.findByTransactionId(request.getTransactionId());
         if (existingTransaction.isPresent()) {
             if (existingTransaction.get().getStatus() == TransactionStatus.COMPLETED || existingTransaction.get().getStatus() == TransactionStatus.PENDING) {
                 updateTransactionStatus(existingTransaction.get(), TransactionStatus.DUPLICATE, null);
@@ -42,8 +44,8 @@ public class TransactionMessageConsumer {
             }
         }
         TransactionEntity newTransaction = TransactionMapper.TransactionToTransactionEntity(request, TransactionStatus.PENDING);
-        transactionRepository.save(newTransaction);
-        Optional<WalletEntity> wallet = walletRepository.findByWalletIdWithLock(request.getWalletId());
+        transactionRepositoryService.saveTransaction(newTransaction);
+        Optional<WalletEntity> wallet = walletRepositoryService.findByWalletIdWithLock(request.getWalletId());
 
         try {
             if (request.getType() == TransactionType.WITHDRAW) {
@@ -51,7 +53,7 @@ public class TransactionMessageConsumer {
             } else {
                 wallet.get().deposite(request.getAmount());
             }
-            walletRepository.save(wallet.get());
+            walletRepositoryService.saveWallet(wallet.get());
             updateTransactionStatus(newTransaction, TransactionStatus.COMPLETED, null);
         } catch (IllegalArgumentException e) {
             updateTransactionStatus(newTransaction, TransactionStatus.FAILED, e.getMessage());
@@ -66,6 +68,6 @@ public class TransactionMessageConsumer {
         transaction.setStatus(status);
         transaction.setErrorMessage(errorMessage);
         transaction.setTimestamp(LocalDateTime.now());
-        transactionRepository.save(transaction);
+        transactionRepositoryService.saveTransaction(transaction);
     }
 }

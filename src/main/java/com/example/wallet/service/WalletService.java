@@ -1,7 +1,7 @@
 package com.example.wallet.service;
 
 import com.example.wallet.datasource.entityModel.WalletEntity;
-import com.example.wallet.datasource.repository.WalletRepository;
+import com.example.wallet.datasource.service.WalletRepositoryService;
 import com.example.wallet.web.dto.Transaction;
 import com.example.wallet.exception.WalletNotFoundException;
 import com.example.wallet.messaging.TransactionMessageProducer;
@@ -18,7 +18,7 @@ import java.util.UUID;
 @Slf4j
 public class WalletService {
 
-    private final WalletRepository walletRepository;
+    private final WalletRepositoryService walletRepositoryService;
     private final TransactionMessageProducer transactionMessageProducer;
 
     @Transactional
@@ -30,18 +30,18 @@ public class WalletService {
         wallet.setWalletId(UUID.randomUUID());
         wallet.setBalance(initialBalance);
         wallet.setVersion(0L);
-        return walletRepository.save(wallet);
+        return walletRepositoryService.saveWallet(wallet);
     }
 
     @Transactional(readOnly = true)
     public BigDecimal getBalance(UUID walletUuid) {
-        return walletRepository.findByWalletId(walletUuid)
+        return walletRepositoryService.findByWalletId(walletUuid)
                 .map(WalletEntity::getBalance)
                 .orElseThrow(() -> new WalletNotFoundException("Кошелек не найден"));
     }
 
     public void processTransaction(Transaction transaction) {
-        walletRepository.findByWalletId(transaction.getWalletId())
+        walletRepositoryService.findByWalletId(transaction.getWalletId())
                 .orElseThrow(() -> new WalletNotFoundException("Кошелек не найден"));
 
         transactionMessageProducer.sendTransactionRequest(transaction);
