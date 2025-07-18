@@ -1,6 +1,6 @@
 package com.example.wallet.web.controller;
 
-import com.example.wallet.service.WalletService;
+import com.example.wallet.service.Wallet;
 import com.example.wallet.web.dto.Transaction;
 import com.example.wallet.web.dto.TransactionRequest;
 import com.example.wallet.exception.WalletNotFoundException;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class TransactionController {
 
-    private final WalletService walletService;
+    private final Wallet walletService;
 
     @PostMapping("/transaction")
     public ResponseEntity<String> performTransaction(@Valid @RequestBody TransactionRequest request) {

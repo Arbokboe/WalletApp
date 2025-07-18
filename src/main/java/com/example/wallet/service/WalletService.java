@@ -16,7 +16,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class WalletService {
+public class WalletService implements Wallet{
 
     private final WalletRepositoryService walletRepositoryService;
     private final TransactionMessageProducer transactionMessageProducer;

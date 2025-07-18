@@ -8,14 +8,12 @@ import com.example.wallet.datasource.mapper.TransactionMapper;
 import com.example.wallet.datasource.service.TransactionRepositoryService;
 import com.example.wallet.datasource.service.WalletRepositoryService;
 import com.example.wallet.web.dto.Transaction;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -23,7 +21,6 @@ import java.util.Optional;
 
 import static com.example.wallet.messaging.TransactionMessageProducer.TRANSACTION_QUEUE;
 
-@Data
 @Component
 @RequiredArgsConstructor
 public class TransactionMessageConsumer {
@@ -32,8 +29,8 @@ public class TransactionMessageConsumer {
     private final TransactionRepositoryService transactionRepositoryService;
 
     @RabbitListener(queues = TRANSACTION_QUEUE, concurrency = "10")
-    @Retryable(value = {Exception.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
-    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
+    @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(delay = 10000))
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void handleTransactionRequest(Transaction request) {
         Long startTime = System.nanoTime();
         Optional<TransactionEntity> existingTransaction = transactionRepositoryService.findByTransactionId(request.getTransactionId());

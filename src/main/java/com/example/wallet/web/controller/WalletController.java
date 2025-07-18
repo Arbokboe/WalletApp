@@ -2,7 +2,7 @@ package com.example.wallet.web.controller;
 
 import com.example.wallet.datasource.entityModel.WalletEntity;
 import com.example.wallet.exception.WalletNotFoundException;
-import com.example.wallet.service.WalletService;
+import com.example.wallet.service.Wallet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class WalletController {
 
-    private final WalletService walletService;
+    private final Wallet walletService;
 
     @PostMapping("/createWallet")
     public ResponseEntity<Map<String, String>> createWallet(@RequestParam(required = false, defaultValue = "0.00") BigDecimal initialBalance) {

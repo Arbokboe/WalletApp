@@ -8,6 +8,7 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+
 import static com.example.wallet.messaging.TransactionMessageProducer.TRANSACTION_QUEUE;
 
 
@@ -19,6 +20,10 @@ public class RabbitMQConf {
         return new Jackson2JsonMessageConverter();
     }
 
+    /**
+     * @param connectionFactory Spring заинжектит ConnectionFactory на основе properties
+     * @return экземпляр RabbitTemplate с установленным converter json
+     */
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
