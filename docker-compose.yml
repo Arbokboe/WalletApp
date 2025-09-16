@@ -1,62 +1,62 @@
 version: '3.8'
 
 services:
-  # Сервис для вашего Spring Boot приложения
+ 
   app:
     build:
-      context: . # Указывает Docker на текущую директорию для поиска Dockerfile
+      context: . 
       dockerfile: Dockerfile
     container_name: wallet-app
     ports:
-      - "8080:8080" # Проброс порта: <порт_на_хосте>:<порт_в_контейнере>
+      - "8080:8080" 
     environment:
-      # Настройки для подключения к PostgreSQL внутри Docker сети
+    
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/walletdb
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
-      # Настройки для подключения к RabbitMQ внутри Docker сети
+    
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
-      # Дополнительные настройки Spring (например, уровень логирования)
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update # или create, validate, none
+   
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update 
     depends_on:
-      - db # Приложение запустится после запуска БД
-      - rabbitmq # Приложение запустится после запуска RabbitMQ
+      - db 
+      - rabbitmq 
     networks:
-      - wallet-network # Привязываем к общей сети
+      - wallet-network 
 
-  # Сервис для PostgreSQL базы данных
+  
   db:
-    image: postgres:17-alpine # Используем образ PostgreSQL 17
+    image: postgres:17-alpine 
     container_name: wallet-db
     ports:
-      - "5432:5432" # Проброс порта для доступа к БД с хоста (опционально, для PgAdmin и т.д.)
+      - "5432:5432" 
     environment:
       POSTGRES_DB: walletdb
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
     volumes:
-      - db_data:/var/lib/postgresql/data # Сохранение данных БД на хосте
+      - db_data:/var/lib/postgresql/data 
     networks:
-      - wallet-network # Привязываем к общей сети
+      - wallet-network 
 
-  # Сервис для RabbitMQ
+
   rabbitmq:
-    image: rabbitmq:3-management-alpine # Образ RabbitMQ с UI для управления (http://localhost:15672)
+    image: rabbitmq:3-management-alpine 
     container_name: wallet-rabbitmq
     ports:
-      - "5672:5672" # Стандартный порт AMQP для приложений
-      - "15672:15672" # Порт для веб-интерфейса RabbitMQ Management
+      - "5672:5672" 
+      - "15672:15672" 
     networks:
-      - wallet-network # Привязываем к общей сети
+      - wallet-network
 
-# Определение сетей, чтобы сервисы могли общаться по именам хостов
+
 networks:
   wallet-network:
     driver: bridge
 
-# Определение томов для сохранения данных
+
 volumes:
   db_data:
